@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  PRESIDENTE
+  VECINO
+}
+
+enum TipoUnidad {
+  VIVIENDA
+  GARAJE
+  TRASTERO
+}
+
+enum EstadoIncidencia {
+  PENDIENTE
+  EN_PROCESO
+  RESUELTO
+}
+
+enum EstadoReserva {
+  CONFIRMADA
+  CANCELADA
+}
+
+enum EstadoRecibo {
+  PENDIENTE
+  PAGADO
+}
+
+enum TipoMovimiento {
+  INGRESO
+  GASTO
+}
+
+enum OpcionVoto {
+  SI
+  NO
+  ABSTENCION
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  nombre       String
+  telefono     String?
+  createdAt    DateTime @default(now())
+
+  memberships          Membership[]
+  unidadesPropietario  Unidad[]              @relation("Propietario")
+  unidadesInquilino    Unidad[]              @relation("Inquilino")
+  incidenciasCreadas   Incidencia[]          @relation("IncidenciaCreador")
+  incidenciaComentarios IncidenciaComentario[]
+  anunciosCreados      Anuncio[]
+  documentosSubidos    Documento[]
+}
+
+model Membership {
+  id          String   @id @default(cuid())
+  userId      String
+  comunidadId String
+  role        Role
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, comunidadId])
+}
+
+model Comunidad {
+  id        String   @id @default(cuid())
+  nombre    String
+  direccion String
+  cif       String?
+  createdAt DateTime @default(now())
+
+  memberships   Membership[]
+  edificios     Edificio[]
+  incidencias   Incidencia[]
+  zonasComunes  ZonaComun[]
+  votaciones    Votacion[]
+  documentos    Documento[]
+  anuncios      Anuncio[]
+  movimientos   MovimientoContable[]
+}
+
+model Edificio {
+  id          String @id @default(cuid())
+  comunidadId String
+  nombre      String
+  direccion   String
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  unidades  Unidad[]
+}
+
+model Unidad {
+  id             String     @id @default(cuid())
+  edificioId     String
+  tipo           TipoUnidad
+  identificador  String
+  propietarioId  String?
+  inquilinoId    String?
+
+  edificio    Edificio     @relation(fields: [edificioId], references: [id], onDelete: Cascade)
+  propietario User?        @relation("Propietario", fields: [propietarioId], references: [id])
+  inquilino   User?        @relation("Inquilino", fields: [inquilinoId], references: [id])
+  incidencias Incidencia[]
+  reservas    Reserva[]
+  votos       Voto[]
+  recibos     Recibo[]
+
+  @@unique([edificioId, identificador])
+}
+
+model Incidencia {
+  id            String           @id @default(cuid())
+  comunidadId   String
+  unidadId      String?
+  titulo        String
+  descripcion   String
+  estado        EstadoIncidencia @default(PENDIENTE)
+  fotos         String[]         @default([])
+  creadoPorId   String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  comunidad  Comunidad               @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  unidad     Unidad?                 @relation(fields: [unidadId], references: [id])
+  creadoPor  User                    @relation("IncidenciaCreador", fields: [creadoPorId], references: [id])
+  comentarios IncidenciaComentario[]
+}
+
+model IncidenciaComentario {
+  id           String   @id @default(cuid())
+  incidenciaId String
+  autorId      String
+  texto        String
+  createdAt    DateTime @default(now())
+
+  incidencia Incidencia @relation(fields: [incidenciaId], references: [id], onDelete: Cascade)
+  autor      User       @relation(fields: [autorId], references: [id])
+}
+
+model ZonaComun {
+  id          String @id @default(cuid())
+  comunidadId String
+  nombre      String
+  descripcion String?
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  reservas  Reserva[]
+}
+
+model Reserva {
+  id          String        @id @default(cuid())
+  zonaComunId String
+  unidadId    String
+  fecha       DateTime
+  horaInicio  String
+  horaFin     String
+  estado      EstadoReserva @default(CONFIRMADA)
+  createdAt   DateTime      @default(now())
+
+  zonaComun ZonaComun @relation(fields: [zonaComunId], references: [id], onDelete: Cascade)
+  unidad    Unidad    @relation(fields: [unidadId], references: [id], onDelete: Cascade)
+}
+
+model Votacion {
+  id                String   @id @default(cuid())
+  comunidadId       String
+  pregunta          String
+  fechaCierre       DateTime
+  resultadosVisibles Boolean @default(true)
+  createdAt         DateTime @default(now())
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  votos     Voto[]
+}
+
+model Voto {
+  id         String     @id @default(cuid())
+  votacionId String
+  unidadId   String
+  opcion     OpcionVoto
+  createdAt  DateTime   @default(now())
+
+  votacion Votacion @relation(fields: [votacionId], references: [id], onDelete: Cascade)
+  unidad   Unidad   @relation(fields: [unidadId], references: [id], onDelete: Cascade)
+
+  @@unique([votacionId, unidadId])
+}
+
+model Documento {
+  id          String   @id @default(cuid())
+  comunidadId String
+  categoria   String
+  nombre      String
+  url         String
+  subidoPorId String
+  createdAt   DateTime @default(now())
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  subidoPor User      @relation(fields: [subidoPorId], references: [id])
+}
+
+model Anuncio {
+  id          String   @id @default(cuid())
+  comunidadId String
+  titulo      String
+  cuerpo      String
+  autorId     String
+  createdAt   DateTime @default(now())
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+  autor     User      @relation(fields: [autorId], references: [id])
+}
+
+model Recibo {
+  id                String       @id @default(cuid())
+  unidadId          String
+  concepto          String
+  importe           Decimal      @db.Decimal(10, 2)
+  fechaEmision      DateTime
+  fechaVencimiento  DateTime
+  estado            EstadoRecibo @default(PENDIENTE)
+  createdAt         DateTime     @default(now())
+
+  unidad Unidad @relation(fields: [unidadId], references: [id], onDelete: Cascade)
+}
+
+model MovimientoContable {
+  id          String         @id @default(cuid())
+  comunidadId String
+  tipo        TipoMovimiento
+  concepto    String
+  importe     Decimal        @db.Decimal(10, 2)
+  fecha       DateTime
+
+  comunidad Comunidad @relation(fields: [comunidadId], references: [id], onDelete: Cascade)
+}
