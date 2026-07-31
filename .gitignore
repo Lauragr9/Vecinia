@@ -38,4 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# uploaded files (local prototype storage)
+/public/uploads/
 next-env.d.ts
+
+/src/generated/prisma
