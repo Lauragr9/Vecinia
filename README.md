@@ -2,12 +2,17 @@
 
 Plataforma de gestión de comunidades de vecinos: administradores de fincas, presidentes y vecinos en un único sitio, sustituyendo WhatsApp/correo/papel.
 
+## Arquitectura
+
+Monorepo con dos aplicaciones independientes:
+
+- **`backend/`** — API REST (Node.js + TypeScript + Express + Prisma + PostgreSQL + JWT). Toda la lógica de negocio y el acceso a datos viven aquí.
+- **`frontend/`** — Next.js 16 (App Router) + TypeScript + Tailwind CSS + shadcn/ui (Base UI). Cliente puro de la API: no accede a la base de datos directamente. El login guarda el JWT en una cookie `httpOnly` propia (patrón BFF) — el navegador nunca habla con el backend directamente.
+
 ## Stack
 
-- [Next.js 16](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS + [shadcn/ui](https://ui.shadcn.com) (Base UI)
-- [Prisma 7](https://www.prisma.io) + PostgreSQL
-- [NextAuth.js v5](https://authjs.dev) (credenciales)
-- [Recharts](https://recharts.org) para gráficas
+- Backend: Express 5, Prisma 7, PostgreSQL, JWT (`jsonwebtoken`), `bcryptjs`, `multer`, `zod`.
+- Frontend: Next.js 16, Tailwind CSS v4, shadcn/ui (Base UI), Recharts, `lucide-react`.
 
 ## Requisitos
 
@@ -17,11 +22,11 @@ Plataforma de gestión de comunidades de vecinos: administradores de fincas, pre
 ## Puesta en marcha
 
 ```bash
-docker compose up -d          # levanta PostgreSQL en local
-npm install
-npx prisma migrate dev        # crea el esquema
-npx prisma db seed            # carga datos de ejemplo
-npm run dev
+docker compose up -d                              # levanta PostgreSQL en local
+npm install                                        # instala backend y frontend (workspaces)
+npm run prisma:migrate --workspace=backend          # crea el esquema
+npm run prisma:seed --workspace=backend             # carga datos de ejemplo
+npm run dev                                         # levanta backend (:4000) y frontend (:3000) a la vez
 ```
 
 Abre [http://localhost:3000](http://localhost:3000).
