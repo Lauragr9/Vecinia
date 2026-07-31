@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vecinia
 
-## Getting Started
+Plataforma de gestión de comunidades de vecinos: administradores de fincas, presidentes y vecinos en un único sitio, sustituyendo WhatsApp/correo/papel.
 
-First, run the development server:
+## Stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS + [shadcn/ui](https://ui.shadcn.com) (Base UI)
+- [Prisma 7](https://www.prisma.io) + PostgreSQL
+- [NextAuth.js v5](https://authjs.dev) (credenciales)
+- [Recharts](https://recharts.org) para gráficas
+
+## Requisitos
+
+- Node.js 20+
+- Docker (para levantar PostgreSQL en local)
+
+## Puesta en marcha
 
 ```bash
+docker compose up -d          # levanta PostgreSQL en local
+npm install
+npx prisma migrate dev        # crea el esquema
+npx prisma db seed            # carga datos de ejemplo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Usuarios de prueba (contraseña `password123`)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Email | Rol |
+|---|---|
+| `admin@fincas.test` | Administrador de fincas (varias comunidades) |
+| `presidente@fincas.test` | Presidente |
+| `vecino1@fincas.test` / `vecino2@fincas.test` | Vecino |
 
-## Learn More
+## Funcionalidades
 
-To learn more about Next.js, take a look at the following resources:
+- **Panel admin**: comunidades, edificios, unidades (viviendas/garajes/trasteros), vecinos, incidencias, reservas, votaciones, documentos, anuncios, gastos y recibos.
+- **Portal del vecino/presidente**: su unidad, anuncios, documentos, incidencias, reservas de zonas comunes, votaciones y recibos.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Fuera de alcance (backlog "Fase 2")
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+IA (resúmenes de actas, chat, asistente), chat en tiempo real, app móvil nativa, empresas externas, pasarela de pago real, automatizaciones.
