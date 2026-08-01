@@ -25,11 +25,6 @@ export const getMemberships = cache(async (): Promise<Membership[]> => {
   return session.memberships;
 });
 
-export const isAdminAnywhere = cache(async (): Promise<boolean> => {
-  const memberships = await getMemberships();
-  return memberships.some((m) => m.role === "ADMIN");
-});
-
 export async function requireMembership(comunidadId: string, roles?: Role[]) {
   const memberships = await getMemberships();
   const membership = memberships.find((m) => m.comunidadId === comunidadId);
@@ -52,7 +47,7 @@ export const getPortalMembership = cache(async (): Promise<Membership> => {
   const memberships = await getMemberships();
   const membership = memberships.find((m) => m.role !== "ADMIN") ?? memberships[0];
   if (!membership) {
-    redirect("/login");
+    redirect("/");
   }
   return membership;
 });

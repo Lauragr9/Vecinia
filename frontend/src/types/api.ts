@@ -11,6 +11,7 @@ export interface User {
   email: string;
   nombre: string;
   telefono?: string | null;
+  emailVerified?: boolean;
 }
 
 export interface Comunidad {
