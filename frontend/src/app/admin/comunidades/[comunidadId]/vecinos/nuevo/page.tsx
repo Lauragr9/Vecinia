@@ -29,16 +29,12 @@ export default async function NuevoVecinoPage({
           <form action={action} className="flex flex-col gap-4">
             <FormError message={error} />
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" name="nombre" required />
-            </div>
-            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="telefono">Teléfono (opcional)</Label>
-              <Input id="telefono" name="telefono" />
+              <Input id="email" name="email" type="email" required placeholder="vecino@email.com" />
+              <p className="text-xs text-muted-foreground">
+                Le enviaremos una invitación a este email para que complete su registro (nombre, teléfono y
+                contraseña).
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="role">Rol</Label>
@@ -51,7 +47,7 @@ export default async function NuevoVecinoPage({
               <Button type="button" variant="outline" nativeButton={false} render={<Link href={backHref} />}>
                 Cancelar
               </Button>
-              <Button type="submit">Crear vecino</Button>
+              <Button type="submit">Enviar invitación</Button>
             </div>
           </form>
         </CardContent>

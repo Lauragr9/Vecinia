@@ -90,3 +90,24 @@ export async function apiLogin(email: string, password: string) {
 
   return res.json() as Promise<{ token: string; user: { id: string; email: string; nombre: string } }>;
 }
+
+interface AuthResult {
+  token: string;
+  user: { id: string; email: string; nombre: string };
+}
+
+export function apiRegister(data: { nombre: string; email: string; password: string }) {
+  return apiPost<{ message: string }>("/api/auth/register", data);
+}
+
+export function apiVerifyEmail(token: string) {
+  return apiPost<AuthResult>("/api/auth/verify-email", { token });
+}
+
+export function apiAcceptInvite(data: { token: string; nombre: string; telefono?: string; password: string }) {
+  return apiPost<AuthResult>("/api/auth/accept-invite", data);
+}
+
+export function apiResendVerification(email: string) {
+  return apiPost<{ message: string }>("/api/auth/resend-verification", { email });
+}

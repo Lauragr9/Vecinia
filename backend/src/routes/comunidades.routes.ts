@@ -1,14 +1,15 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import * as z from "zod";
 import { prisma } from "../lib/prisma.js";
 import { requireAuth, requireAdmin, requireMembership } from "../middleware/auth.js";
 import { HttpError } from "../middleware/error-handler.js";
+import { createToken } from "../lib/tokens.js";
+import { sendInviteEmail } from "../lib/email.js";
 
 export const comunidadesRouter = Router();
 comunidadesRouter.use(requireAuth);
-
-const DEFAULT_PASSWORD = "bienvenido123";
 
 const comunidadSchema = z.object({
   nombre: z.string().trim().min(2, "El nombre es obligatorio."),
@@ -169,9 +170,7 @@ comunidadesRouter.get("/comunidades/:id/vecinos", async (req, res) => {
 });
 
 const vecinoSchema = z.object({
-  nombre: z.string().trim().min(2, "El nombre es obligatorio."),
   email: z.email("Email no válido."),
-  telefono: z.string().trim().optional(),
   role: z.enum(["VECINO", "PRESIDENTE"]),
 });
 
@@ -184,12 +183,18 @@ comunidadesRouter.post("/comunidades/:id/vecinos", async (req, res) => {
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Datos inválidos.");
   }
 
-  const { nombre, email, telefono, role } = parsed.data;
+  const { email, role } = parsed.data;
 
   let user = await prisma.user.findUnique({ where: { email } });
+  let invited = false;
+
   if (!user) {
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
-    user = await prisma.user.create({ data: { nombre, email, telefono, passwordHash } });
+    // Cuenta "en espera": sin contraseña utilizable hasta que el vecino complete su registro.
+    const passwordHash = await bcrypt.hash(randomBytes(32).toString("hex"), 10);
+    user = await prisma.user.create({
+      data: { nombre: email, email, passwordHash, emailVerified: false },
+    });
+    invited = true;
   }
 
   const existing = await prisma.membership.findUnique({
@@ -204,7 +209,13 @@ comunidadesRouter.post("/comunidades/:id/vecinos", async (req, res) => {
     include: { user: true },
   });
 
-  res.status(201).json({ membership, defaultPassword: DEFAULT_PASSWORD });
+  if (invited) {
+    const comunidad = await prisma.comunidad.findUniqueOrThrow({ where: { id: comunidadId } });
+    const token = await createToken(user.id, "INVITE");
+    await sendInviteEmail(user.email, comunidad.nombre, token);
+  }
+
+  res.status(201).json({ membership, invited });
 });
 
 comunidadesRouter.delete("/vecinos/:membershipId", async (req, res) => {

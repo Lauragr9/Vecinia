@@ -20,10 +20,10 @@ export default async function VecinosPage({
   searchParams,
 }: {
   params: Promise<{ comunidadId: string }>;
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{ created?: string; invited?: string }>;
 }) {
   const { comunidadId } = await params;
-  const { created } = await searchParams;
+  const { created, invited } = await searchParams;
 
   const memberships = await apiGet<VecinoMembership[]>(`/api/comunidades/${comunidadId}/vecinos`);
 
@@ -42,8 +42,16 @@ export default async function VecinosPage({
 
       {created && (
         <div className="rounded-md border border-status-good/30 bg-status-good/10 px-3 py-2 text-sm">
-          Vecino creado con email <strong>{created}</strong>. Contraseña temporal:{" "}
-          <strong>bienvenido123</strong>
+          {invited === "1" ? (
+            <>
+              Invitación enviada a <strong>{created}</strong>. Podrá completar su registro en cuanto abra el enlace
+              de su email.
+            </>
+          ) : (
+            <>
+              <strong>{created}</strong> ya tenía cuenta en Vecinia — se le ha añadido a esta comunidad.
+            </>
+          )}
         </div>
       )}
 
@@ -54,17 +62,25 @@ export default async function VecinosPage({
             <TableHead>Email</TableHead>
             <TableHead>Teléfono</TableHead>
             <TableHead>Rol</TableHead>
+            <TableHead>Estado</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {memberships.map((m) => (
             <TableRow key={m.id}>
-              <TableCell>{m.user.nombre}</TableCell>
+              <TableCell>{m.user.emailVerified ? m.user.nombre : "-"}</TableCell>
               <TableCell>{m.user.email}</TableCell>
               <TableCell>{m.user.telefono ?? "-"}</TableCell>
               <TableCell>
                 <Badge variant="secondary">{ROLE_LABELS[m.role]}</Badge>
+              </TableCell>
+              <TableCell>
+                {m.user.emailVerified ? (
+                  <Badge variant="success">Activo</Badge>
+                ) : (
+                  <Badge variant="warning">Invitación pendiente</Badge>
+                )}
               </TableCell>
               <TableCell className="text-right">
                 {m.role !== "ADMIN" && (
@@ -79,7 +95,7 @@ export default async function VecinosPage({
           ))}
           {memberships.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 Todavía no hay vecinos registrados.
               </TableCell>
             </TableRow>

@@ -2,18 +2,33 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { TOKEN_COOKIE } from "@/lib/constants";
 
-const publicRoutes = ["/login"];
+// Rutas de "solo invitado": si ya tienes sesión, te mandamos a "/".
+const publicOnlyRoutes = ["/login", "/registro"];
+
+// Rutas accesibles siempre, estés o no autenticado (procesan un token propio).
+const alwaysAccessibleRoutes = [
+  "/registro/confirmacion",
+  "/verificar-email",
+  "/verificar-email/error",
+  "/completar-registro",
+];
 
 export default function proxy(req: NextRequest) {
   const { nextUrl, cookies } = req;
   const isLoggedIn = !!cookies.get(TOKEN_COOKIE)?.value;
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  const path = nextUrl.pathname;
 
-  if (!isLoggedIn && !isPublicRoute) {
+  if (alwaysAccessibleRoutes.includes(path)) {
+    return NextResponse.next();
+  }
+
+  const isPublicOnlyRoute = publicOnlyRoutes.includes(path);
+
+  if (!isLoggedIn && !isPublicOnlyRoute) {
     return NextResponse.redirect(new URL("/login", nextUrl));
   }
 
-  if (isLoggedIn && isPublicRoute) {
+  if (isLoggedIn && isPublicOnlyRoute) {
     return NextResponse.redirect(new URL("/", nextUrl));
   }
 }

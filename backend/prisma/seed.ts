@@ -10,45 +10,49 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@fincas.test" },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: "admin@fincas.test",
       passwordHash: password,
       nombre: "Ana Administradora",
       telefono: "600111222",
+      emailVerified: true,
     },
   });
 
   const presidente = await prisma.user.upsert({
     where: { email: "presidente@fincas.test" },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: "presidente@fincas.test",
       passwordHash: password,
       nombre: "Pedro Presidente",
       telefono: "600333444",
+      emailVerified: true,
     },
   });
 
   const vecino1 = await prisma.user.upsert({
     where: { email: "vecino1@fincas.test" },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: "vecino1@fincas.test",
       passwordHash: password,
       nombre: "Vera Vecina",
       telefono: "600555666",
+      emailVerified: true,
     },
   });
 
   const vecino2 = await prisma.user.upsert({
     where: { email: "vecino2@fincas.test" },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: "vecino2@fincas.test",
       passwordHash: password,
       nombre: "Vicente Vecino",
       telefono: "600777888",
+      emailVerified: true,
     },
   });
 
